@@ -1,0 +1,447 @@
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+</head>
+<body class="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100">
+
+<header class="sticky top-0 z-50 bg-white/90 dark:bg-gray-800 backdrop-blur shadow px-6 py-4 flex justify-between items-center">
+  <h1 class="text-xl font-bold">🏠 Admin Dashboard</h1>
+  <div class="flex gap-3">
+    <button onclick="openAddMemberModal()" class="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700">+ Add Member</button>
+    <form action="/logout" method="post">
+      <button type="submit" class="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600">Logout</button>
+    </form>
+  </div>
+</header>
+
+<!-- Add Member Modal -->
+<div id="addMemberModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+    <h2 class="text-lg font-bold mb-4">Add New Member</h2>
+    <!-- <form id="addMemberForm" class="space-y-3"> -->
+    <form id="addMemberForm" method="post" action="/api/members" class="space-y-3">  
+      <input type="text" name="full_name" placeholder="Full Name" class="w-full border p-2 rounded" required>
+      <input type="text" name="mobile" placeholder="Mobile" class="w-full border p-2 rounded" required>
+      <input type="email" name="email" placeholder="Email" class="w-full border p-2 rounded">
+      <input type="text" name="flat_number" placeholder="Flat No." class="w-full border p-2 rounded">
+      <input type="text" name="vehicle_no" placeholder="Vehicle No." class="w-full border p-2 rounded">
+      <select name="ownership_type" class="w-full border p-2 rounded">
+        <option value="Owned">Owned</option>
+        <option value="Rented">Rented</option>
+      </select>
+      <select name="home_locked" class="w-full border p-2 rounded">
+        <option value="No">No</option>
+        <option value="Yes">Yes</option>
+      </select>
+      <input type="password" name="password" placeholder="Password" class="w-full border p-2 rounded" required>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeAddMemberModal()" class="px-4 py-2 bg-gray-300 rounded">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openAddMemberModal() {
+  document.getElementById("addMemberModal").classList.remove("hidden");
+}
+
+function closeAddMemberModal() {
+  document.getElementById("addMemberModal").classList.add("hidden");
+}
+document.addEventListener("DOMContentLoaded", function () {
+  const addMemberForm = document.getElementById("addMemberForm");
+  if (addMemberForm) {
+    addMemberForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const response = await fetch("/api/members", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        this.reset();
+        closeAddMemberModal();
+        location.reload();
+      } else {
+        const errorData = await response.json();
+        alert(`❌ Failed to add member: ${errorData.detail || "Something went wrong"}`);
+      }
+    });
+  }
+});
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  const memberSearch = document.getElementById("memberSearch");
+  const rows = document.querySelectorAll("#membersTable tbody tr");
+
+  if (memberSearch && rows.length > 0) {
+    memberSearch.addEventListener("input", function () {
+      const val = this.value.toLowerCase();
+      rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(val) ? "" : "none";
+      });
+    });
+  } else {
+    console.log("Search or table rows not found");
+  }
+});
+
+
+const memberSearch = document.getElementById("memberSearch");
+const membersTable = document.querySelectorAll("tbody tr");
+
+if (memberSearch) {
+  memberSearch.addEventListener("input", function () {
+    const val = this.value.toLowerCase();
+    membersTable.forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(val) ? "" : "none";
+    });
+  });
+}
+</script>
+
+<main class="p-6 space-y-10">
+
+    <!-- Notice Board -->
+  <section>
+    <h2 class="text-lg font-semibold mb-2">Notice Board</h2>
+    <form method="post" action="/save-notice">
+      <textarea name="content" class="w-full p-3 rounded border" rows="3">{{ notice.get('content', '') }}</textarea>
+      <div class="text-right mt-2">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Save</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Dashboard Summary Widgets -->
+  <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded shadow p-4 flex flex-col gap-1">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm text-gray-600">🗓️ Previous Month Balance</h3>
+      </div>
+      <p class="text-2xl font-semibold text-gray-800">₹{{ prev_month_balance }}</p>
+    </div>
+    
+  <div class="bg-white rounded shadow p-4">
+    <h3 class="text-sm text-gray-600">Current Month Collection</h3>
+    <p class="text-2xl font-semibold text-green-600">₹{{ current_month_collection }}</p>
+  </div>
+  <div class="bg-white rounded shadow p-4">
+    <h3 class="text-sm text-gray-600">Current Month Expenses</h3>
+    <p class="text-2xl font-semibold text-red-600">₹{{ current_month_expenses }}</p>
+  </div>
+  <div class="bg-white rounded shadow p-4">
+    <h3 class="text-sm text-gray-600">Current Month Balance</h3>
+    <p class="text-2xl font-semibold text-blue-600">₹{{ current_month_balance }}</p>
+  </div>
+  </section>
+
+  <!-- Charts -->
+  <section>
+    <h2 class="text-xl font-semibold mb-4">Dashboard Charts</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-medium text-gray-700 mb-2">Collection vs Unpaid</h3>
+        <canvas id="chart1" height="200"></canvas>
+      </div>
+      <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-medium text-gray-700 mb-2">Collection vs Expenses</h3>
+        <canvas id="chart2" height="200"></canvas>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- Member Search -->
+<section class="mb-4">
+  <input type="text" id="memberSearch" placeholder="Search members by name, flat, or mobile..." class="w-full md:w-1/2 p-2 border rounded shadow">
+</section>
+
+  <!-- Members Table -->
+  <section>
+    <h2 class="text-xl font-semibold mb-4">Members</h2>
+    <div class="overflow-auto bg-white rounded shadow">
+      <table id="membersTable" class="min-w-full text-sm text-left">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-2">Name</th>
+            <th class="px-4 py-2">Mobile</th>
+            <th class="px-4 py-2">Flat</th>
+            <th class="px-4 py-2">Email</th>
+            <th class="px-4 py-2">Vehicle</th>
+            <th class="px-4 py-2">Ownership</th>
+            <th class="px-4 py-2">Locked</th>
+            <th class="px-4 py-2">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for member in members %}
+          <tr>
+            <td class="px-4 py-2">{{ member.get('full_name', 'N/A') }}</td>
+            <td class="px-4 py-2">{{ member.get('mobile', 'N/A') }}</td>
+            <td class="px-4 py-2">{{ member.get('flat_number', 'N/A') }}</td>
+            <td class="px-4 py-2">{{ member.get('email', 'N/A') }}</td>
+            <td class="px-4 py-2">{{ member.get('vehicle_no', 'N/A') }}</td>
+            <td class="px-4 py-2">{{ member.get('ownership_type', 'N/A') }}</td>
+            <td class="px-4 py-2">{{ member.get('home_locked', 'N/A') }}</td>
+            <td class="px-4 py-2">
+              <button onclick="openAddPaymentModal('{{ member.id }}')"
+              class="text-sm px-3 py-1 rounded {% if not member.get('has_due') %}bg-gray-400 text-white cursor-not-allowed{% else %}bg-blue-500 text-white hover:bg-blue-600{% endif %}"
+              {% if not member.get('has_due') %}disabled{% endif %}>
+              + Add Payment
+            </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+
+
+<!-- Expense Tracker Section -->
+<section>
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-semibold">Expense Tracker</h2>
+    <button type="button" onclick="openAddExpenseModal()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Add Expense</button>
+  </div>
+  <div class="bg-white rounded shadow max-h-96 overflow-y-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-4 py-2 text-left">Date</th>
+          <th class="px-4 py-2 text-left">Particular</th>
+          <th class="px-4 py-2 text-left">Amount (₹)</th>
+          <!-- <th class="px-4 py-2 text-left">Balance (₹)</th> -->
+        </tr>
+      </thead>
+      <tbody>
+        {% set running_total = total_collected %}
+        {% for exp in expenses %}
+        {% set current_balance = running_total - exp.get('amount', 0) %}
+        <tr>
+          <td class="px-4 py-2">{{ exp.get('date', '-') }}</td>
+          <td class="px-4 py-2">{{ exp.get('description', '-') }}</td>
+          <td class="px-4 py-2">₹{{ exp.get('amount', 0) }}</td>
+          <!-- <td class="px-4 py-2 {% if current_balance < 500 %}text-red-600 font-semibold{% endif %}">₹{{ current_balance }}</td> -->
+        </tr>
+        {% set current_balance = running_total - exp.get('amount', 0) %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
+<!-- Add Expense Modal -->
+<div id="addExpenseModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+    <h2 class="text-lg font-bold mb-4">Add New Expense</h2>
+    <form id="addExpenseForm" class="space-y-3">
+      <input type="date" name="date" class="w-full border p-2 rounded" required>
+      <input type="text" name="description" placeholder="Particular" class="w-full border p-2 rounded" required>
+      <input type="number" name="amount" step="0.01" placeholder="Amount" class="w-full border p-2 rounded" required>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeAddExpenseModal()" class="px-4 py-2 bg-gray-300 rounded">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openAddExpenseModal() {
+  document.getElementById("addExpenseModal").classList.remove("hidden");
+}
+
+function closeAddExpenseModal() {
+  document.getElementById("addExpenseModal").classList.add("hidden");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  const expenseForm = document.getElementById("addExpenseForm");
+  if (expenseForm) {
+    expenseForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const response = await fetch("/api/expenses", {
+        method: "POST",
+        body: formData
+      });
+
+      if (response.ok) {
+        this.reset();
+        closeAddExpenseModal();
+        location.reload();
+      } else {
+        alert("Failed to add expense.");
+      }
+    });
+  }
+});
+</script>
+
+
+  <!-- Defaulters Section -->
+<section>
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-xl font-semibold text-red-600">🔴 Defaulters (By Month)</h2>
+    <a href="/export-defaulters" class="text-sm bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Export CSV</a>
+  </div>
+  <div class="overflow-auto bg-white rounded shadow">
+    <table class="min-w-full text-sm">
+      <thead class="bg-red-100 text-red-700">
+        <tr>
+          <th class="px-4 py-2 text-left">Name</th>
+          <th class="px-4 py-2 text-left">Flat</th>
+          <th class="px-4 py-2 text-left">Mobile</th>
+          <th class="px-4 py-2 text-left">Pending Months</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in defaulters %}
+        <tr>
+          <td class="px-4 py-2">{{ d.get('full_name') }}</td>
+          <td class="px-4 py-2">{{ d.get('flat_number') }}</td>
+          <td class="px-4 py-2">{{ d.get('mobile') }}</td>
+          <td class="px-4 py-2">
+            {% if d.get('unpaid_months') %}
+              {{ d.get('unpaid_months') | join(', ') }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% include 'modals.html' %}
+</main>
+
+<script>
+  const ctx1 = document.getElementById('chart1').getContext('2d');
+  new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: {{ chart_months | tojson }},
+      datasets: [
+        {
+          label: 'Collected',
+          data: {{ collected_data | tojson }},
+          backgroundColor: 'green'
+        },
+        {
+          label: 'Unpaid (Excludes Locked)',
+          data: {{ not_paid_data | tojson }},
+          backgroundColor: 'red'
+        }
+      ]
+    }
+  });
+  
+  const ctx2 = document.getElementById('chart2').getContext('2d');
+  new Chart(ctx2, {
+    type: 'bar',
+    data: {
+      labels: {{ chart_months | tojson }},
+      datasets: [
+        {
+          label: 'Collection',
+          data: {{ collected_data | tojson }},
+          backgroundColor: 'blue'
+        },
+        {
+          label: 'Expenses',
+          data: {{ expense_data | tojson }},
+          backgroundColor: 'orange'
+        }
+      ]
+    }
+  });
+  </script>
+  
+
+<script src="/static/dashboard.js"></script>
+</body>
+</html>
+
+
+<!-- Add Payment Modal -->
+<div id="addPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-500">
+  <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+    <h2 class="text-lg font-bold mb-4">Add Payment</h2>
+    <form id="addPaymentForm" class="space-y-3">
+      <input type="hidden" name="user_id" id="paymentUserId">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Month Paid For</label>
+        <input type="month" name="month_paid_for" class="w-full border p-2 rounded" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Amount</label>
+        <input type="number" name="amount" value="500" step="0.01" class="w-full border p-2 rounded" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Payment Mode</label>
+        <select name="payment_mode" class="w-full border p-2 rounded" required>
+          <option value="UPI">UPI</option>
+          <option value="Cash">Cash</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeAddPaymentModal()" class="px-4 py-2 bg-gray-300 rounded">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Confirm & Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openAddPaymentModal(userId) {
+  document.getElementById("paymentUserId").value = userId;
+  document.getElementById("addPaymentModal").classList.remove("hidden");
+}
+
+function closeAddPaymentModal() {
+  document.getElementById("addPaymentModal").classList.add("hidden");
+}
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  const paymentForm = document.getElementById("addPaymentForm");
+  if (paymentForm) {
+    paymentForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      if (!confirm("Are you sure you want to add this payment?")) return;
+      const formData = new FormData(this);
+      const response = await fetch("/api/payments", {
+        method: "POST",
+        body: formData
+      });
+      if (response.ok) {
+        this.reset();
+        closeAddPaymentModal();
+        location.reload();
+      } else {
+        alert("Failed to add payment.");
+      }
+    });
+  }
+});
+</script>

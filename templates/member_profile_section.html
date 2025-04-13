@@ -1,0 +1,79 @@
+
+<!-- Member Profile Section -->
+<section class="bg-white p-6 rounded shadow mt-6 max-w-xl mx-auto">
+  <form method="post" action="/update-profile" id="profileForm">
+    <input type="hidden" name="user_id" value="{{ user.id }}">
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium">Full Name</label>
+        <input type="text" name="full_name" value="{{ user.full_name }}" class="w-full border p-2 rounded" disabled>
+      </div>
+      <div>
+        <label class="block text-sm font-medium">Mobile</label>
+        <input type="text" name="mobile" value="{{ user.mobile }}" class="w-full border p-2 rounded" disabled>
+      </div>
+      <div>
+        <label class="block text-sm font-medium">Email</label>
+        <input type="email" name="email" value="{{ user.email }}" class="w-full border p-2 rounded" disabled>
+      </div>
+      <div>
+        <label class="block text-sm font-medium">Alternate Phones</label>
+        <input type="text" name="alternate_phones" value="{{ user.alternate_phones | join(', ') if user.alternate_phones else '' }}" class="w-full border p-2 rounded" disabled>
+      </div>
+      <div>
+        <label class="block text-sm font-medium">Flat Number</label>
+        <input type="text" name="flat_number" value="{{ user.flat_number }}" class="w-full border p-2 rounded" disabled>
+      </div>
+      <div>
+        <label class="block text-sm font-medium">Vehicles</label>
+        {% set vehicles = user.vehicle_numbers %}
+{% if vehicles is string %}
+  {% set vehicles = vehicles | safe | replace("'", '"') | from_json %}
+{% endif %}
+<input type="text" name="vehicle_numbers" value="{{ vehicles | join(', ') if vehicles else '' }}" class="w-full border p-2 rounded" disabled>
+      </div>
+      <div>
+        <label class="block text-sm font-medium">Ownership</label>
+        <select name="ownership_type" class="w-full border p-2 rounded" disabled>
+          <option value="Owned" {% if user.ownership_type == 'Owned' %}selected{% endif %}>Owned</option>
+          <option value="Rented" {% if user.ownership_type == 'Rented' %}selected{% endif %}>Rented</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium">Home Locked</label>
+        <select name="home_locked" class="w-full border p-2 rounded" disabled>
+          <option value="True" {% if user.home_locked %}selected{% endif %}>Yes</option>
+          <option value="False" {% if not user.home_locked %}selected{% endif %}>No</option>
+        </select>
+      </div>
+    </div>
+    <div class="text-right mt-4 flex justify-end gap-2" id="actionButtons">
+      <button type="button" onclick="enableEdit()" id="editBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Edit</button>
+      <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hidden" id="saveBtn">Save</button>
+      <button type="button" onclick="cancelEdit()" id="cancelBtn" class="bg-gray-400 text-white px-4 py-2 rounded hidden">Cancel</button>
+    </div>
+  </form>
+</section>
+
+<script>
+function enableEdit() {
+  const form = document.getElementById("profileForm");
+  form.querySelectorAll("input, select").forEach(el => {
+    if (el.name !== "user_id") el.disabled = false;
+  });
+  document.getElementById("saveBtn").classList.remove("hidden");
+  document.getElementById("cancelBtn").classList.remove("hidden");
+  document.getElementById("editBtn").classList.add("hidden");
+}
+
+function cancelEdit() {
+  const form = document.getElementById("profileForm");
+  form.reset();
+  form.querySelectorAll("input, select").forEach(el => {
+    if (el.name !== "user_id") el.disabled = true;
+  });
+  document.getElementById("saveBtn").classList.add("hidden");
+  document.getElementById("cancelBtn").classList.add("hidden");
+  document.getElementById("editBtn").classList.remove("hidden");
+}
+</script>

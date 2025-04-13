@@ -1,0 +1,29 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Search Results</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 p-6">
+  <h1 class="text-xl font-bold mb-4">🔍 Search Results for "{{ query }}"</h1>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mx-auto">
+    {% for user in members %}
+      <div class="bg-white p-4 rounded shadow space-y-1">
+        <h3 class="font-bold text-lg">{{ user.full_name }}</h3>
+        <p>📱 {{ user.mobile }}</p>
+        <p>🏠 Flat: {{ user.flat_number }}</p>
+        <p>🚗 {{ user.vehicle_numbers | join(', ') if user.vehicle_numbers else 'No vehicles' }}</p>
+        <p>{{ user.ownership_type }}</p>
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if not members %}
+    <p class="text-center text-gray-500 mt-4">No matching members found.</p>
+  {% endif %}
+</body>
+</html>

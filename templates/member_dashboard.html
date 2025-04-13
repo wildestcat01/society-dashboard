@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Member Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <header class="bg-white shadow sticky top-0 z-50 flex justify-between items-center px-6 py-4">
+    <h1 class="text-xl font-bold">👤 Member Dashboard</h1>
+    <div id="liveClock" class="bg-white shadow px-4 py-2 rounded text-sm font-medium flex items-center gap-2">🕒<span id="clockText"></span></div>
+    <form action="/logout" method="post">
+      <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+    </form>
+  </header>
+
+  <main class="p-6 space-y-10">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center">
+    <div class="flex items-center gap-4">
+      <div class="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center relative">
+        <span class="text-xs text-center">Profile<br>Picture</span>
+        <span class="absolute bottom-1 right-1 bg-white text-xs border rounded-full px-1">✏️</span>
+      </div>
+      <h1 class="text-2xl font-bold">Hello, {{ user.full_name }}!</h1>
+    </div>
+    <!-- Notice Board -->
+    <div class="bg-white rounded shadow p-4 w-full md:w-3/5">
+    <h2 class="text-lg font-semibold mb-2">📢 Notice Board</h2>
+    <p>{{ notice_board }}</p>
+    {{ notice_text }}
+  </div>
+  </div>
+
+
+
+<!-- 60% : 40% Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-6">
+
+  <!-- Payment Section -->
+<div class="lg:col-span-3 bg-white rounded shadow p-4 h-auto">
+
+  <h2 class="text-lg font-semibold mb-4">💳 Monthly Payment Overview</h2>
+
+  <!-- Payment Status Grid -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6 text-sm font-medium">
+    {% for item in payment_status %}
+    <div class="text-center p-3 rounded shadow border
+      {% if item.status == 'paid' %}bg-green-500 text-white
+      {% elif item.status == 'due' %}bg-yellow-400 text-black
+      {% elif item.status == 'missed' %}bg-red-500 text-white
+      {% else %}bg-white text-gray-800 border{% endif %}">
+      {{ item.month }}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Legend -->
+  <div class="flex flex-wrap gap-6 text-sm mb-6">
+    <div class="flex items-center gap-2"><div class="w-4 h-4 bg-green-500 rounded"></div>Paid</div>
+    <div class="flex items-center gap-2"><div class="w-4 h-4 bg-yellow-400 rounded"></div>Due</div>
+    <div class="flex items-center gap-2"><div class="w-4 h-4 bg-red-500 rounded"></div>Missed</div>
+    <div class="flex items-center gap-2"><div class="w-4 h-4 border border-gray-400 bg-white rounded"></div>Upcoming</div>
+  </div>
+
+  <!-- Due Box -->
+  {% if next_due %}
+  <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 p-4 rounded mb-6">
+    <strong>🔔 Payment Due:</strong><br>
+    ₹{{ due_amount }} for {{ next_due }}
+  </div>
+  {% endif %}
+
+  <!-- Outstanding Due Box -->
+  {% if due_months %}
+  <div class="bg-yellow-100 text-yellow-800 border border-yellow-300 p-4 rounded mb-6">
+    <h3 class="text-md font-semibold mb-2">⚠️ Payment Due</h3>
+    <p>You have pending payments for:</p>
+    <ul class="list-disc ml-5">
+      {% for month in due_months %}
+        <li>{{ month }} - ₹500</li>
+      {% endfor %}
+    </ul>
+    <p class="mt-2 font-semibold">Total Due: ₹{{ 500 * due_months | length }}</p>
+  </div>
+  {% endif %}
+
+  <!-- QR Code for UPI -->
+  <!-- <div class="border-t pt-4 mb-6">
+    <h3 class="text-md font-semibold mb-2">Scan QR to Pay</h3>
+    <img src="/static/sample.webp" alt="UPI QR Code" class="w-48 h-48 object-contain border rounded shadow mx-auto">
+    <p class="text-center text-xs text-gray-500 mt-2">Use any UPI app to scan and pay</p>
+  </div> -->
+
+  <div class="border-t pt-4 mb-6">
+    <h3 class="text-md font-semibold mb-2">Scan QR to Pay</h3>
+    <img src="/static/sample.webp" alt="UPI QR Code" class="w-48 h-48 object-contain border rounded shadow mx-auto">
+    <p class="text-center text-xs text-gray-500 mt-2">Use any UPI app to scan and pay</p>
+    <p class="text-center mt-2">
+      <a href="upi://pay?pa=bialaalal@okaxis&pn=Society%20Maintenance" class="text-blue-600 underline text-sm">
+        💸 Pay to UPI ID: bialaalal@okaxis
+      </a>
+    </p>
+  </div>
+
+  <!-- Manual Payment Update -->
+  <div class="border-t pt-4">
+    <h3 class="text-md font-semibold mb-2">📤 Confirm Manual Payment</h3>
+    <form onsubmit="showComingSoon(); return false;" class="space-y-2">
+      <input type="hidden" name="user_id" value="{{ user.id }}">
+      <label class="block text-sm">Month (YYYY-MM)</label>
+      <input type="text" name="month_paid_for" class="w-full p-2 border rounded" required>
+      <label class="block text-sm">UPI Reference</label>
+      <input type="text" name="upi_reference" class="w-full p-2 border rounded" required>
+      <button class="bg-blue-600 text-white px-4 py-2 rounded w-full">Submit Payment</button>
+    </form>
+  </div>
+</div>
+    <!-- Modal -->
+    <div id="comingSoonModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+      <div class="bg-white p-6 rounded shadow-lg text-center max-w-xs mx-auto">
+        <h2 class="text-xl font-semibold mb-2">Coming Soon</h2>
+        <p class="mb-4 text-gray-600">This feature will be available shortly.</p>
+        <button onclick="closeComingSoon()" class="px-4 py-2 bg-blue-600 text-white rounded">OK</button>
+      </div>
+    </div>
+
+    <script>
+    function showComingSoon() {
+      document.getElementById('comingSoonModal').classList.remove('hidden');
+    }
+    function closeComingSoon() {
+      document.getElementById('comingSoonModal').classList.add('hidden');
+    }
+    </script>
+
+
+  <!-- Right Side (40%) -->
+  <div class="lg:col-span-2">
+    <section class="bg-white p-6 rounded shadow w-full h-full">
+      <form method="post" action="/update-profile" id="profileForm">
+        <input type="hidden" name="user_id" value="{{ user.id }}">
+
+        <h2 class="text-xl font-semibold mb-4">👤 Profile Information</h2>
+
+        <div class="space-y-4">
+          <div><label class="block text-sm font-medium">Full Name</label>
+            <input type="text" name="full_name" value="{{ user.full_name }}" class="w-full border p-2 rounded" disabled></div>
+          <div><label class="block text-sm font-medium">Mobile</label>
+            <input type="text" name="mobile" value="{{ user.mobile }}" class="w-full border p-2 rounded" disabled></div>
+          <div><label class="block text-sm font-medium">Email</label>
+            <input type="email" name="email" value="{{ user.email }}" class="w-full border p-2 rounded" disabled></div>
+          <div><label class="block text-sm font-medium">Alternate Phones</label>
+            <input type="text" name="alternate_phones" value="{{ user.alternate_phones | join(', ') if user.alternate_phones else '' }}" class="w-full border p-2 rounded" disabled></div>
+          <div><label class="block text-sm font-medium">Flat Number</label>
+            <input type="text" name="flat_number" value="{{ user.flat_number }}" class="w-full border p-2 rounded" disabled></div>
+          <div><label class="block text-sm font-medium">Vehicles</label>
+            <input type="text" name="vehicle_no" value="{{ user.vehicle_no  if user.vehicle_no else '' }}" class="w-full border p-2 rounded" disabled></div>
+            <div><label class="block text-sm font-medium">Alternate Vehicles</label>
+            <input type="text" name="vehicle_numbers" value="{{ user.vehicle_numbers | join(', ') if user.vehicle_numbers else '' }}" class="w-full border p-2 rounded" disabled></div>
+           <div><label class="block text-sm font-medium">Ownership</label>
+            <select name="ownership_type" class="w-full border p-2 rounded" disabled>
+              <option value="Owned" {% if user.ownership_type == 'Owned' %}selected{% endif %}>Owned</option>
+              <option value="Rented" {% if user.ownership_type == 'Rented' %}selected{% endif %}>Rented</option>
+            </select></div>
+          <div><label class="block text-sm font-medium">Home Locked</label>
+            <select name="home_locked" class="w-full border p-2 rounded" disabled>
+              <option value="True" {% if user.home_locked %}selected{% endif %}>Yes</option>
+              <option value="False" {% if not user.home_locked %}selected{% endif %}>No</option>
+            </select></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="text-right mt-4 flex justify-end gap-2" id="actionButtons">
+          <button type="button" onclick="enableEdit()" id="editBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Edit</button>
+          <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hidden" id="saveBtn">Save</button>
+          <button type="button" onclick="cancelEdit()" id="cancelBtn" class="bg-gray-400 text-white px-4 py-2 rounded hidden">Cancel</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+</div>
+
+
+<script>
+function enableEdit() {
+  const form = document.getElementById("profileForm");
+  form.querySelectorAll("input, select").forEach(el => {
+    if (el.name !== "user_id") el.disabled = false;
+  });
+  document.getElementById("saveBtn").classList.remove("hidden"); document.getElementById("editBtn").classList.add("hidden");
+}
+
+function cancelEdit() {
+  const form = document.getElementById("profileForm");
+  form.reset();  // revert values
+  form.querySelectorAll("input, select").forEach(el => {
+    if (el.name !== "user_id") el.disabled = true;
+  });
+  document.getElementById("saveBtn").classList.add("hidden");
+  document.getElementById("cancelBtn").classList.add("hidden");
+  document.getElementById("editBtn").classList.remove("hidden");
+}
+
+</script>
+
+
+
+
+<!-- Member Search UI -->
+<section class="mt-6 bg-white p-4 rounded shadow">
+  <h2 class="text-xl font-semibold mb-4">👤 Search Your Neighbour</h2>
+  <input type="text" id="memberSearchInput" placeholder="Search by name, phone, flat, or vehicle"
+         oninput="searchMembers()" class="w-full border p-2 rounded mb-3">
+  <div id="memberSearchResults" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <p id="loadingIndicator" class="text-blue-500 hidden col-span-full">Searching...</p>
+    <p id="noResultsMsg" class="text-gray-500 hidden col-span-full">No matching members found.</p>
+  </div>
+</section>
+
+<script>
+  function searchMembers() {
+    const query = document.getElementById("memberSearchInput").value.trim();
+    const loading = document.getElementById("loadingIndicator");
+    const noResults = document.getElementById("noResultsMsg");
+    const resultsContainer = document.getElementById("memberSearchResults");
+  
+    // Hide old state
+    noResults.classList.add("hidden");
+  
+    // Only search after 2+ characters
+    if (query.length < 2) {
+      document.querySelectorAll("#memberSearchResults .member-card").forEach(el => el.remove());
+      loading.classList.add("hidden");
+      return;
+    }
+  
+    loading.classList.remove("hidden");
+  
+    fetch(`/search-members?query=${encodeURIComponent(query)}`)
+      .then(res => res.json())
+      .then(data => {
+        loading.classList.add("hidden");
+        document.querySelectorAll("#memberSearchResults .member-card").forEach(el => el.remove());
+  
+        if (!data.results || data.results.length === 0) {
+          noResults.classList.remove("hidden");
+          return;
+        }
+  
+        data.results.forEach(user => {
+          const vehicleList = Array.isArray(user.vehicle_numbers)
+            ? user.vehicle_numbers.join(", ")
+            : (typeof user.vehicle_numbers === "string" && user.vehicle_numbers !== "[]" ? user.vehicle_numbers : "No vehicles");
+  
+          const card = document.createElement("div");
+          card.className = "p-4 border rounded bg-gray-50 shadow member-card";
+          card.innerHTML = `
+            <h3 class="font-bold text-lg">${user.full_name}</h3>
+            <p>📱 ${user.mobile}</p>
+            <p>🏠 Flat: ${user.flat_number}</p>
+            <p>🚗 ${vehicleList}</p>
+            <p>${user.ownership_type}</p>
+          `;
+          resultsContainer.appendChild(card);
+        });
+      })
+      .catch(err => {
+        loading.classList.add("hidden");
+        console.error("Search failed:", err);
+      });
+  }
+  </script>
+<!-- Clock Script -->
+<script>
+  function updateClock() {
+    const now = new Date();
+    const timeString = now.toLocaleString(); // or use toLocaleTimeString() for just time
+    document.getElementById("clockText").textContent = timeString;
+  }
+
+  setInterval(updateClock, 1000);
+  updateClock();
+</script> 
+

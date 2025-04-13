@@ -1,0 +1,70 @@
+
+<!-- Modal Container -->
+<div id="addMemberModal" class="modal">
+  <div class="modal-content" style="max-width: 500px; margin: auto; background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.1);">
+    <h2 style="text-align:center; margin-bottom: 1.5rem;">Add New Member</h2>
+    <form method="POST" action="/add-member">
+      <div style="margin-bottom: 1rem;">
+        <label>Full Name</label>
+        <input type="text" name="full_name" required style="width:100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px;">
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label>Mobile Number</label>
+        <input type="text" name="mobile" required style="width:100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px;">
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label>Email</label>
+        <input type="email" name="email" style="width:100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px;">
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label>Flat Number</label>
+        <input type="text" name="flat_number" required style="width:100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px;">
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label>Password</label>
+        <input type="password" name="password" id="add-password" required style="width:100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px;">
+        <label style="font-size: 0.9rem;"><input type="checkbox" onclick="document.getElementById('add-password').type = this.checked ? 'text' : 'password'"> Show Password</label>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label>Alternate Phones (JSON Format)</label>
+        <input type="text" name="alternate_phones" placeholder='["9876543210", "9988776655"]' style="width:100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px;">
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label>Vehicle Numbers (JSON Format)</label>
+        <input type="text" name="vehicle_numbers" placeholder='["DL3C1234", "MH12XY7890"]' style="width:100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px;">
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label>Ownership Type</label>
+        <select name="ownership_type" style="width:100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px;">
+          <option value="Owned">Owned</option>
+          <option value="Rented">Rented</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 1rem;">
+        <label>Home Locked</label>
+        <select name="home_locked" style="width:100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px;">
+          <option value="false">No</option>
+          <option value="true">Yes</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label>Status</label>
+        <select name="is_active" style="width:100%; padding: 0.6rem; border: 1px solid #ccc; border-radius: 6px;">
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+      </div>
+
+      <button type="submit" style="width: 100%; background: #4CAF50; color: white; padding: 0.75rem; font-size: 1rem; border: none; border-radius: 6px; cursor: pointer;">Add Member</button>
+    </form>
+  </div>
+</div>

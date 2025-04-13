@@ -1,0 +1,25 @@
+<!-- Add Member Modal -->
+<div id="addMemberModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+    <h2 class="text-lg font-bold mb-4">Add New Member</h2>
+    <form id="addMemberForm" method="post" action="#" onsubmit="return false;">
+      <input type="text" name="full_name" placeholder="Full Name" class="w-full border p-2 rounded" required>
+      <input type="text" name="mobile" placeholder="Mobile" class="w-full border p-2 rounded" required>
+      <input type="text" name="email" placeholder="Email" class="w-full border p-2 rounded">
+      <input type="text" name="flat_number" placeholder="Flat No." class="w-full border p-2 rounded">
+      <input type="text" name="vehicle_no" placeholder="Vehicle No." class="w-full border p-2 rounded">
+      <select name="ownership_type" class="w-full border p-2 rounded">
+        <option value="Owned">Owned</option>
+        <option value="Rented">Rented</option>
+      </select>
+      <select name="home_locked" class="w-full border p-2 rounded">
+        <option value="No">No</option>
+        <option value="Yes">Yes</option>
+      </select>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeAddMemberModal()" class="px-4 py-2 bg-gray-300 rounded">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
