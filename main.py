@@ -21,7 +21,9 @@ from export_defaulters_csv import router as export_defaulters_router
 from add_payment_api import router as payment_router
 from starlette.middleware.sessions import SessionMiddleware
 from auth_routes import router as auth_router
-
+from fastapi import APIRouter, Form
+from passlib.hash import bcrypt
+from passlib.hash import bcrypt
 
 import os
 
