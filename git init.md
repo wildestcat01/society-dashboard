@@ -6,3 +6,6 @@ git push -u origin main
 
 
 uvicorn main:app --reload 
+
+git pull --rebase origin main
+git push origin main
