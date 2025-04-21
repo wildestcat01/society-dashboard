@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Request,Form
 from fastapi.templating import Jinja2Templates
 from utils.supabase_client import supabase
@@ -7,18 +6,39 @@ from collections import defaultdict
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from passlib.hash import bcrypt
-from fastapi import APIRouter, Form
+# from fastapi import APIRouter, Form
 from supabase import create_client
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 import traceback
 import os
-
+from dotenv import load_dotenv
+from supabase import create_client
 
 router = APIRouter()
+load_dotenv()
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 templates = Jinja2Templates(directory="templates")
 
-
+@router.post("/send-notification")
+async def send_notification(
+    title: str = Form(...),
+    message: str = Form(...),
+    target_type: str = Form(...),
+    target_user_id: str = Form(None)
+):
+    data = {
+        "title": title,
+        "message": message,
+        "target_type": target_type,
+        "target_user_id": target_user_id if target_user_id else None,
+        "created_at": datetime.utcnow().isoformat()
+    }
+    supabase.table("notifications").insert(data).execute()
+    print("[✅ Notification Sent] Title:", title, "| Target:", target_type, "| User ID:", target_user_id)
+    return RedirectResponse(url="/admin-dashboard", status_code=303)
 
 @router.post("/save-notice")
 def save_notice(request: Request, content: str = Form(...)):
@@ -28,7 +48,7 @@ def save_notice(request: Request, content: str = Form(...)):
 @router.get("/admin-dashboard", response_class=HTMLResponse)
 def admin_dashboard(request: Request):
     try:
-        now = datetime.now()
+        now = datetime.utcnow()
         this_month = f"{now.year}-{now.month:02}"
         prev_month = f"{now.year}-{(now.month - 1):02}" if now.month > 1 else f"{now.year - 1}-12"
 
@@ -130,7 +150,7 @@ def add_expense(
     description: str = Form(...),
     amount: float = Form(...)
 ):
-    print("[ADD EXPENSE] Date:", date, "Desc:", description, "Amount:", amount)
+    print("[ADD EXPENSE] Date:", date, "Description:", description, "Amount:", amount)
     try:
         supabase.table("expenses").insert({
             "date": date,

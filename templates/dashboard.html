@@ -15,6 +15,7 @@
   <h1 class="text-xl font-bold">🏠 Admin Dashboard</h1>
   <div class="flex gap-3">
     <button onclick="openAddMemberModal()" class="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700">+ Add Member</button>
+    <button onclick="openNotificationModal()" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700">📣 Notify</button>
     <form action="/logout" method="post">
       <button type="submit" class="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600">Logout</button>
     </form>
@@ -445,6 +446,51 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 </script>
+
+
+<!-- Notification Section -->
+<!-- Notification Modal -->
+<div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-lg relative">
+    <button onclick="closeNotificationModal()" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-xl">✖</button>
+    <h2 class="text-xl font-bold mb-4 text-center">📣 Send Notification</h2>
+    <form method="post" action="/send-notification" class="space-y-4">
+      <input type="text" name="title" placeholder="Notification Title" required class="w-full border p-2 rounded">
+      <textarea name="message" placeholder="Notification Message" required class="w-full border p-2 rounded" rows="4"></textarea>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Send To:</label>
+        <select name="target_type" onchange="toggleTarget(this.value)" class="w-full border p-2 rounded">
+          <option value="all">All Members</option>
+          <option value="defaulters">Defaulters Only</option>
+          <option value="paid">Paid Members</option>
+          <option value="specific">Specific Member</option>
+        </select>
+      </div>
+      <div id="target_user_input" style="display:none;">
+        <input type="text" name="target_user_id" placeholder="User ID" class="w-full border p-2 rounded">
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="closeNotificationModal()" class="px-4 py-2 bg-gray-300 rounded">Cancel</button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">🚀 Send</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function toggleTarget(value) {
+    document.getElementById('target_user_input').style.display = (value === 'specific') ? 'block' : 'none';
+  }
+
+  function openNotificationModal() {
+    document.getElementById("notificationModal").classList.remove("hidden");
+  }
+
+  function closeNotificationModal() {
+    document.getElementById("notificationModal").classList.add("hidden");
+  }
+</script>
+
 
 <!-- footer -->
 <footer class="bg-white text-center py-4 border-t text-sm text-gray-500">

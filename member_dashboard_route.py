@@ -11,38 +11,8 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 
-# # Inside member_dashboard_route.py
-# @router.get("/member/{user_id}", response_class=HTMLResponse)
-# def member_dashboard(request: Request, user_id: str):
-
-
-
-#     # Fetch user info (already implemented)
-#     user_result = supabase.table("users").select("*").eq("id", user_id).single().execute()
-#     user = user_result.data
-
-#     # Fetch payments (already implemented)
-#     payments_result = supabase.table("payments").select("*").eq("user_id", user_id).execute()
-#     user_payments = payments_result.data if payments_result.data else []
-
-#     # ✅ Fetch latest notice
-#     notice_resp = supabase.table("notices").select("*").order("created_at", desc=True).limit(1).execute()
-#     notice_text = notice_resp.data[0]["content"] if notice_resp.data else ""
-
-#     months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-#     return templates.TemplateResponse("member_dashboard.html", {
-#         "request": request,
-#         "user": user,
-#         "payments": user_payments,
-#         "months": months,
-#         "notice_text": notice_text # ✅ make sure this is passed
-        
-#     })
-
-
 @router.get("/member/{user_id}")
-def member_dashboard(request: Request, user_id: str):
+async def member_dashboard(request: Request, user_id: str):
     user_res = supabase.table("users").select("*").eq("id", user_id).single().execute()
     user = user_res.data if user_res.data else {}
 
@@ -60,7 +30,6 @@ def member_dashboard(request: Request, user_id: str):
     last_month_str = last_month.strftime("%Y-%m")
     start_month = enrollment_date.replace(day=1)
     end_month = (today.replace(day=1) + timedelta(days=62)).replace(day=1)
-    
 
     month_list = []
     current = start_month
@@ -83,7 +52,24 @@ def member_dashboard(request: Request, user_id: str):
         current = (current + timedelta(days=32)).replace(day=1)
 
     next_due = next((m["month"] for m in month_list if m["status"] == "due"), None)
-    
+
+    # ✅ Fetch latest notification
+    all = supabase.table("notifications").select("*").order("created_at", desc=True).limit(1).execute().data
+    latest = all[0] if all else None
+    print("🔸 Notification Target:", latest.get("target_type") if latest else None)
+
+    show = False
+    if latest:
+        if latest["target_type"] == "all":
+            show = True
+        elif latest["target_type"] == "defaulters" and user.get("is_defaulter"):
+            show = True
+        elif latest["target_type"] == "paid" and not user.get("is_defaulter"):
+            show = True
+        elif latest["target_type"] == "specific" and latest.get("target_user_id") == user_id:
+            show = True
+
+    print("✅ SHOW NOTIFICATION?", show)
 
     return templates.TemplateResponse("member_dashboard.html", {
         "request": request,
@@ -91,5 +77,6 @@ def member_dashboard(request: Request, user_id: str):
         "payment_status": month_list,
         "next_due": next_due,
         "due_amount": 500,
-        "notice_text": notice_text # ✅ make sure this is passed
+        "notice_text": notice_text,
+        "notification": latest if show else None
     })

@@ -133,3 +133,5 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
+# for route in app.routes:
+#     print("📍 ROUTE:", route.path)
